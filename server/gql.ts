@@ -25,3 +25,21 @@ export function discussionGql(categoryId: string | undefined) {
     }
   }`;
 }
+
+export function discussionDetailGql(postId: number | undefined) {
+  return `{
+        repository(owner: "minhthuong031103", name: "minhthuong-blog"){
+            discussion(number: ${postId}){
+                title
+                bodyHTML
+                createdAt
+                author {
+                    login
+                    url 
+                    avatarUrl
+                }
+            }
+        }
+
+    }`;
+}
