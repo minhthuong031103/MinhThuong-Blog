@@ -25,7 +25,7 @@
 }
 .html > * > pre {
   margin: 1rem 0;
-  background-color: rgb(150, 167, 167);
+  background-color: #eee3cb;
   padding: 0.75rem;
   overflow-x: scroll;
   border-radius: 12px;

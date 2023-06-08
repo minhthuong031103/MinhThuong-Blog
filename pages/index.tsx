@@ -1,17 +1,24 @@
-import BlogPreview from '@/components/BlogPreview';
-import { getBlogs } from '@/server/blogs';
+import { GetServerSideProps, InferGetServerSidePropsType } from 'next';
+import { Blogs } from './components/Blog';
 import { BlogProps } from '@/types/blog_type';
-import {
-  GetServerSideProps,
-  InferGetServerSidePropsType,
-  NextPage,
-} from 'next';
+import { getBlogs } from '@/server/blogs';
 import { useMemo, useState } from 'react';
+import React from 'react';
+import Link from 'next/link';
+import { ImageCover } from '@/imageCover';
+import {
+  AiOutlineTags,
+  AiOutlineClockCircle,
+  AiOutlineComment,
+  AiOutlineShareAlt,
+} from 'react-icons/ai';
 
-const Home: NextPage = ({
+import styles from './style.module.css';
+const Blog = ({
   blogData,
   tags,
 }: InferGetServerSidePropsType<typeof getServerSideProps>) => {
+  // Search for blog by category
   const [filterWord, setFilterWord] = useState<string[]>([]);
   const [selectedIdx, setSelectedIdx] = useState<number[]>([]);
   const filteredBlog: BlogProps[] = useMemo(() => {
@@ -30,59 +37,109 @@ const Home: NextPage = ({
       setFilterWord([...filterWord, tag.innerText]);
     }
   };
+  const blog = filteredBlog;
 
   return (
-    <main className="layout">
-      <title> Home Page </title>
-      <section>
-        <div className="mt-3 text-center">
-          <h1 className="text-[3rem]"> Welcome to DevBlog </h1>
-          <p>
-            A full-stack blog made with Next.js, TailwindCSS, Github GraphQL
-          </p>
-        </div>
-      </section>
-      <section className="flex flex-col items-center text-[1.15rem] mt-12">
-        <div className="flex gap-3 mb-12">
-          {tags.map((tag: string, idx: number) => {
-            return (
-              <button
-                className={`${
-                  selectedIdx.includes(idx)
-                    ? 'label-selected hover:bg-sky-400 transition-all duration-300'
-                    : 'label hover:bg-sky-400 transition-all duration-300'
-                }`}
-                key={idx}
-                onClick={(e) => filterLabel(e.target, idx)}
-              >
-                {tag}
-              </button>
-            );
-          })}
-        </div>
-        {filteredBlog.map((blog: BlogProps) => {
+    <>
+      <div
+        className="flex flex-row
+         justify-center items-center flex-wrap
+            mt-16 mb-8"
+      >
+        {tags.map((tag: string, idx: number) => {
           return (
             <div
-              key={blog.id}
-              className="max-w-[28em] max-h-[20em] overflow-hidden mx-6 mb-6 bg-neutral-300 text-zinc-800 rounded-lg p-4 hover:bg-neutral-500 hover:text-neutral-300 transition-all duration-300"
+              key={idx}
+              className={`${
+                !selectedIdx.includes(idx)
+                  ? `flex justify-center items-center
+              text-xs text-left text-gray line-height[1.5] xl:text-lg 
+              px-2 py-1.5 rounded-md bg-[#ECE5C7] 
+              text-black font-semibold 
+              cursor-pointer transition-all duration-300 
+              ease-in-out mx-2 hover:bg-secondary-color 
+           hover:text-[#116A7B] transform hover:translate-y-[-15px] 
+             md:px-4 md:py-2 md:rounded-lg`
+                  : `flex justify-center items-center
+            text-xs text-left text-gray line-height[1.5] xl:text-lg 
+            px-2 py-1.5 rounded-md bg-[#EA906C] 
+            text-black font-semibold 
+            cursor-pointer transition-all duration-300 
+            ease-in-out mx-2 hover:bg-secondary-color 
+         hover:text-[#116A7B] 
+           md:px-4 md:py-2 md:rounded-lg`
+              }`}
+              onClick={(e) => filterLabel(e.target, idx)}
             >
-              <a href={blog.url} target="_blank" rel="noreferrer">
-                <BlogPreview
-                  title={blog.title}
-                  bodyText={blog.bodyText}
-                  createdAt={blog.createdAt}
-                  author={blog.author}
-                  tags={blog.tags}
-                />
-              </a>
+              {tag}
             </div>
           );
         })}
+      </div>
+
+      <section className={styles.blog}>
+        <div className="container grid grid-cols-1 sm:grid-cols-2 gap-4 md:grid-cols-3">
+          {blog ? (
+            blog.map(function (item) {
+              const imageCover = ImageCover.find(
+                (image) => image.id === item.id
+              );
+              const createdDay: Date = new Date(item.createdAt);
+              const options: Intl.DateTimeFormatOptions = {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+              };
+              return (
+                <div className={styles.boxItems} key={item.id}>
+                  <Link
+                    href={item.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="link"
+                  >
+                    <div className="img">
+                      <img src={imageCover?.cover || ''} alt="" />
+                    </div>
+                  </Link>
+                  <div className="bg-slate-100 rounded-lg">
+                    <div className="flex flex-row gap-1">
+                      <AiOutlineTags className={styles.icon} />
+                      {item.tags.map(function (tag, index) {
+                        return (
+                          <div key={index} className={styles.tag}>
+                            <Link className="ml-[2px]" href="/">
+                              #{tag}
+                            </Link>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    <h3 className="text-2xl">{item.title}</h3>
+
+                    <p>{item.bodyText.slice(0, 180)}...</p>
+                    <div className={styles.date}>
+                      <AiOutlineClockCircle className={styles.icon} />{' '}
+                      <label htmlFor="">
+                        {createdDay.toLocaleDateString('en-US', options)}
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          ) : (
+            <div className="box boxItems">
+              <h1>Không có bài viết nào</h1>
+            </div>
+          )}
+        </div>
       </section>
-    </main>
+    </>
   );
 };
-export default Home;
+export default Blog;
 export const getServerSideProps: GetServerSideProps = async () => {
   let blogs: BlogProps[] = await getBlogs();
   let tags: string[] = [];
